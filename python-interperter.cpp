@@ -1,5 +1,6 @@
 #include <iostream>
 #include<fstream>
+#include<string>
 
 using namespace std;
 
@@ -8,14 +9,30 @@ void findToken(string);
 string executePrintToken(int, string);
 string findWord(string, int);
 bool findFuncStart(string, int);
+string getType(string);
+void makeVarible(string, int);
+string getValue(string, int);
 
 bool error = false;
+const int MAX_SIZE = 256;
+
+struct var
+{
+    string type;
+    string name;
+    string value;
+};
+
+var newvars[MAX_SIZE];
 
 int main()
 {
 
   ifstream inFile("python.py");
   string oneline = "";
+
+  newvars[0].type = "end";
+
 
 
   while(inFile)
@@ -43,6 +60,8 @@ void findToken(string line)
     string tokken = "";
     string printME = "test";
     bool start = false;
+    size_t found;
+
     for(int i = 0; i < line.length(); i++)
     {
 
@@ -67,6 +86,12 @@ void findToken(string line)
                 return;
             }
 
+        }
+        else if(line.find("=") != string::npos)
+        {
+            found = line.find("=");
+            cout << "Varible detected" << endl;
+            return;
         }
     }
 
@@ -157,5 +182,97 @@ bool findFuncStart(string line, int position)
         {
             return false;
         }
+    }
+}
+
+void makeVarible(string line, int equalSign)
+{
+    string searching = "";
+    string name, value, type;
+    for(int i = 0; i < line.length(); i++)
+    {
+        searching += line[i];
+        if(line[i] == ' ')
+        {
+            if((i + 1) != equalSign)
+            {
+                error = true;
+                cout << "ERROR INVALID NAME!" << endl;
+                return;
+            }
+            else
+            {
+                name = searching;
+                value = getValue(line, equalSign);
+                type = getType(value);
+                return;
+            }
+        }
+    }
+}
+
+string getValue(string line, int position)
+{
+    string value = "";
+    bool firstCharFound = false;
+
+    for(int i = position + 1; i < line.length(); i++)
+    {
+
+          if(!firstCharFound && (line[i] != " "))
+          {
+              firstCharFound = true;
+          }
+          if(firstCharFound)
+          {
+              value += line[i];
+          }
+
+    }
+
+    return value;
+}
+
+string getType(string value)
+{
+    if(value[0] == '"')
+    {
+        if(value[value.length() - 1] != '"')
+        {
+            error = true;
+            return "error";
+
+        }
+        else
+        {
+            return "string";
+        }
+    }
+
+    else if(value[0] == "'")
+    {
+        if(value[value.length() - 1] != "'")
+        {
+            error = true;
+            return "error";
+
+        }
+        else
+        {
+            return "string";
+        }
+    }
+    else if(int(value[0]) >= 48 && int(value[0]) < 58)
+    {
+        for(int i = 0; i < value.length(); i++)
+        {
+            if(int(value[i]) < 48 || int(value[i]) >= 58)
+            {
+                error = false;
+                return "error";
+            }
+        }
+
+        return "int";
     }
 }
